@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otimizador de Grade Horária Educacional</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1abc9c 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            border: none;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 50px;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #219653 100%);
+            border: none;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            border: none;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e1e5eb;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .result-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .table th {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .info-icon {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        
+        .footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .stats-box {
+            background: linear-gradient(135deg, #1abc9c 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .schedule-table th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .time-header {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .morning-session { background-color: rgba(255, 243, 205, 0.5); }
+        .afternoon-session { background-color: rgba(207, 244, 252, 0.5); }
+        
+        .individual-slot {
+            background-color: rgba(231, 76, 60, 0.15) !important;
+            font-weight: 600;
+            color: #c0392b;
+        }
+
+        .teacher-card { border-left: 4px solid var(--secondary-color); }
+        .individual-card { border-left: 4px solid var(--accent-color); }
+        .capacity-alert { 
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .storage-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            flex-grow: 1;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .import-btn {
+            width: 100%;
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status-success {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+        
+        .status-error {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+            border: 1px solid #c0392b;
+        }
+        
+        .data-actions {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold"><i class="fas fa-calendar-alt me-3"></i>Otimizador de Grade Horária Educacional</h1>
+            <p class="lead">Crie grades semanais eficientes para sua instituição de ensino</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-cogs me-2"></i>Configuração da Grade Horária
+                    </div>
+                    <div class="card-body">
+                        <form id="scheduleForm">
+                            <!-- Seção de Alunos -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="totalStudents" class="form-label fw-bold">Quantidade Total de Alunos <i class="fas fa-info-circle info-icon" title="Número total de alunos a serem atendidos"></i></label>
+                                    <input type="number" class="form-control" id="totalStudents" min="1" value="200" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="individualStudents" class="form-label fw-bold">Alunos com Atendimento Individual <i class="fas fa-info-circle info-icon" title="Alunos que precisam de atendimento individualizado"></i></label>
+                                    <input type="number" class="form-control" id="individualStudents" min="0" value="10" required>
+                                    <div class="form-text">Cada aluno terá 2 aulas semanais.</div>
+                                </div>
+                            </div>
+
+                            <!-- Seção Dinâmica de Professores -->
+                            <div class="card bg-light p-3 mb-4">
+                                <h6 class="mb-3 fw-bold"><i class="fas fa-chalkboard-teacher me-2"></i>Gerenciar Professores</h6>
+                                <div class="row align-items-end">
+                                    <div class="col-md-5 mb-2">
+                                        <label for="teacherName" class="form-label">Nome do Professor</label>
+                                        <input type="text" class="form-control" id="teacherName" placeholder="Ex: Prof. Silva">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label for="teacherShift" class="form-label">Turno</label>
+                                        <select id="teacherShift" class="form-select">
+                                            <option value="morning">Manhã</option>
+                                            <option value="afternoon">Tarde</option>
+                                            <option value="both" selected>Ambos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <button type="button" id="addTeacherBtn" class="btn btn-success w-100"><i class="fas fa-plus me-2"></i>Adicionar</button>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div id="teacherListContainer" class="mt-2" style="max-height: 200px; overflow-y: auto;">
+                                    <p class="text-muted text-center">Nenhum professor adicionado ainda.</p>
+                                </div>
+                            </div>
+
+                            <!-- Opções de Otimização -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="balanceGroups" checked>
+                                        <label class="form-check-label fw-bold" for="balanceGroups">Balancear tamanho dos grupos (2-3 alunos)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="preferAfternoon" checked>
+                                        <label class="form-check-label fw-bold" for="preferAfternoon">Preferir atendimento individual no turno da tarde</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-magic me-2"></i>Otimizar Grade Horária
+                                </button>
+                            </div>
+                            
+                            <!-- Controles de Armazenamento -->
+                            <div class="data-actions mt-4">
+                                <h6 class="mb-3 fw-bold"><i class="fas fa-database me-2"></i>Gerenciar Dados</h6>
+                                <div class="storage-controls">
+                                    <button type="button" id="saveDataBtn" class="btn btn-primary flex-grow-1">
+                                        <i class="fas fa-save me-2"></i>Salvar Configuração
+                                    </button>
+                                    <button type="button" id="exportDataBtn" class="btn btn-success flex-grow-1">
+                                        <i class="fas fa-file-export me-2"></i>Exportar para JSON
+                                    </button>
+                                    <div class="file-input-wrapper flex-grow-1">
+                                        <button class="btn btn-warning import-btn">
+                                            <i class="fas fa-file-import me-2"></i>Importar do JSON
+                                        </button>
+                                        <input type="file" id="importDataInput" accept=".json">
+                                    </div>
+                                </div>
+                                <div id="statusMessage" class="status-message"></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="results" class="result-container">
+                     <h3 class="mb-4 text-center"><i class="fas fa-calendar-check me-2"></i>Grade Semanal Otimizada</h3>
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb me-2"></i>Esta grade foi otimizada para maximizar a utilização dos professores e minimizar conflitos de horário.
+                    </div>
+                    <div id="capacityAlert" class="alert alert-warning d-none">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="alertMessage"></span>
+                    </div>
+                    <div class="mb-4">
+                        <h5><i class="fas fa-users me-2"></i>Distribuição de Grupos</h5>
+                        <div id="groupDistribution" class="p-3 bg-light rounded"></div>
+                    </div>
+                    <div>
+                        <h5><i class="fas fa-table me-2"></i>Grade Horária Detalhada</h5>
+                        <ul class="nav nav-tabs mb-3" id="dayTabs" role="tablist"></ul>
+                        <div class="tab-content" id="dayTabContent"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header"><i class="fas fa-chart-pie me-2"></i>Estatísticas</div>
+                    <div class="card-body">
+                        <div class="stats-box">
+                            <div class="stats-number" id="totalGroups">0</div>
+                            <div class="stats-label">Grupos Formados</div>
+                        </div>
+                         <div class="stats-box" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                            <div class="stats-number" id="totalTeachers">0</div>
+                            <div class="stats-label">Professores Alocados</div>
+                        </div>
+                        <div class="stats-box capacity-alert">
+                            <div class="stats-number" id="capacityValue">0</div>
+                            <div class="stats-label">Horários Disponíveis</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header"><i class="fas fa-chalkboard-teacher me-2"></i>Alocação de Professores</div>
+                    <div class="card-body" id="teacherAllocation"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-user-graduate me-2"></i>Atendimento Individual</div>
+                    <div class="card-body" id="individualAllocation"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer text-center mt-5">
+        <div class="container">
+            <p class="mb-0">Otimizador de Grade Horária Educacional &copy; 2024</p>
+            <p class="mb-0">Dados armazenados localmente no seu navegador</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // State for the list of teachers and editing state
+        let teacherList = [];
+        let editingTeacherId = null;
+
+        // DOM Elements
+        const addTeacherBtn = document.getElementById('addTeacherBtn');
+        const teacherListContainer = document.getElementById('teacherListContainer');
+        const scheduleForm = document.getElementById('scheduleForm');
+        const capacityAlert = document.getElementById('capacityAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        const saveDataBtn = document.getElementById('saveDataBtn');
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const importDataInput = document.getElementById('importDataInput');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // --- Teacher Management ---
+
+        /**
+         * Renders the current list of teachers to the UI, handling the editing state.
+         */
+        function renderTeacherList() {
+            if (teacherList.length === 0) {
+                teacherListContainer.innerHTML = '<p class="text-muted text-center">Nenhum professor adicionado ainda.</p>';
+                return;
+            }
+
+            teacherListContainer.innerHTML = teacherList.map(teacher => {
+                // If the current teacher is the one being edited, show the edit UI
+                if (teacher.id === editingTeacherId) {
+                    return `
+                        <div class="alert alert-warning d-flex justify-content-between align-items-center p-2 mb-2">
+                            <span class="d-flex align-items-center flex-grow-1">
+                                <i class="fas fa-user me-2"></i>
+                                <strong class="me-3">${teacher.name}</strong>
+                                <select class="form-select form-select-sm" id="edit-shift-${teacher.id}">
+                                    <option value="morning" ${teacher.shift === 'morning' ? 'selected' : ''}>Manhã</option>
+                                    <option value="afternoon" ${teacher.shift === 'afternoon' ? 'selected' : ''}>Tarde</option>
+                                    <option value="both" ${teacher.shift === 'both' ? 'selected' : ''}>Ambos</option>
+                                </select>
+                            </span>
+                            <span class="ms-2">
+                                <button type="button" class="btn btn-success btn-sm save-teacher-btn" data-id="${teacher.id}" title="Salvar">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm cancel-edit-btn" title="Cancelar">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </span>
+                        </div>`;
+                } else {
+                    // Otherwise, show the static display UI
+                    return `
+                        <div class="alert alert-secondary d-flex justify-content-between align-items-center p-2 mb-2">
+                            <span>
+                                <i class="fas fa-user me-2"></i>${teacher.name} 
+                                <span class="badge bg-dark">${getShiftName(teacher.shift)}</span>
+                            </span>
+                            <span>
+                                <button type="button" class="btn btn-primary btn-sm edit-teacher-btn" data-id="${teacher.id}" title="Editar Turno">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm remove-teacher-btn ms-1" data-id="${teacher.id}" title="Remover Professor">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </span>
+                        </div>`;
+                }
+            }).join('');
+        }
+
+
+        /**
+         * Returns a user-friendly name for a shift key.
+         */
+        function getShiftName(shift) {
+            const shiftNames = { morning: 'Manhã', afternoon: 'Tarde', both: 'Ambos' };
+            return shiftNames[shift] || '';
+        }
+
+        /**
+         * Adds a new teacher to the list from the input fields.
+         */
+        function addTeacher() {
+            const nameInput = document.getElementById('teacherName');
+            const shiftSelect = document.getElementById('teacherShift');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                showStatus('Por favor, insira o nome do professor.', 'error');
+                return;
+            }
+
+            teacherList.push({ id: Date.now(), name: name, shift: shiftSelect.value });
+            nameInput.value = '';
+            nameInput.focus();
+            renderTeacherList();
+            // Recalculate capacity when adding a teacher
+            calculateCapacity();
+        }
+
+        /**
+         * Removes a teacher from the list.
+         */
+        function removeTeacher(id) {
+            teacherList = teacherList.filter(t => t.id !== id);
+            renderTeacherList();
+            // Recalculate capacity when removing a teacher
+            calculateCapacity();
+        }
+        
+        // --- Capacity Calculation ---
+        
+        /**
+         * Calculates the total teaching capacity based on teachers and their shifts
+         */
+        function calculateCapacity() {
+            if (teacherList.length === 0) {
+                document.getElementById('capacityValue').textContent = '0';
+                return 0;
+            }
+            
+            let totalCapacity = 0;
+            teacherList.forEach(teacher => {
+                switch(teacher.shift) {
+                    case 'morning':
+                        totalCapacity += 4 * 5; // 4 slots/day * 5 days
+                        break;
+                    case 'afternoon':
+                        totalCapacity += 4 * 5;
+                        break;
+                    case 'both':
+                        totalCapacity += 8 * 5; // 8 slots/day * 5 days
+                        break;
+                }
+            });
+            
+            document.getElementById('capacityValue').textContent = totalCapacity;
+            return totalCapacity;
+        }
+        
+        // --- Schedule Generation ---
+
+        /**
+         * Main function to generate the entire schedule based on form inputs.
+         */
+        function generateSchedule() {
+            // Hide any previous alerts
+            capacityAlert.classList.add('d-none');
+            
+            // Get values from the form
+            const totalStudents = parseInt(document.getElementById('totalStudents').value);
+            const individualStudents = parseInt(document.getElementById('individualStudents').value);
+            const balanceGroups = document.getElementById('balanceGroups').checked;
+            const preferAfternoon = document.getElementById('preferAfternoon').checked;
+            
+            // Calculate capacity
+            const totalCapacity = calculateCapacity();
+            
+            // Validate inputs
+            if (totalStudents < individualStudents) {
+                showStatus('O número de alunos com atendimento individual não pode ser maior que o total de alunos!', 'error');
+                return;
+            }
+            if (teacherList.length === 0) {
+                showStatus('Adicione pelo menos um professor para gerar a grade.', 'error');
+                return;
+            }
+            
+            // Calculate group distribution based on capacity
+            const groupStudents = totalStudents - individualStudents;
+            const individualHours = individualStudents * 2; // 2 sessions per student
+            const groupHours = groupStudents > 0 ? 2 : 0; // 2 sessions per group
+            
+            // Check if we have enough capacity
+            if (totalCapacity < individualHours) {
+                alertMessage.textContent = `Capacidade insuficiente! Necessário ${individualHours} horários para atendimento individual, mas só temos ${totalCapacity}.`;
+                capacityAlert.classList.remove('d-none');
+                return;
+            }
+            
+            const availableForGroups = totalCapacity - individualHours;
+            let groups = [];
+            let groupCounter = 1;
+            
+            if (groupStudents > 0) {
+                // Calculate maximum number of groups we can form based on capacity
+                const maxGroups = Math.floor(availableForGroups / groupHours);
+                
+                if (maxGroups <= 0) {
+                    alertMessage.textContent = `Capacidade insuficiente para formar grupos! Necessário ${groupHours * Math.ceil(groupStudents/3)} horários, mas só temos ${availableForGroups} disponíveis.`;
+                    capacityAlert.classList.remove('d-none');
+                } else {
+                    if (balanceGroups) {
+                        let remaining = groupStudents;
+                        while (remaining > 0 && groups.length < maxGroups) {
+                            if (remaining === 1 || remaining === 2 || remaining === 4) {
+                                groups.push({ id: groupCounter++, size: 2 }); 
+                                remaining -= 2;
+                            } else {
+                                groups.push({ id: groupCounter++, size: 3 }); 
+                                remaining -= 3;
+                            }
+                        }
+                        
+                        // If we have leftover students but no more group capacity
+                        if (remaining > 0) {
+                            alertMessage.textContent = `Capacidade insuficiente! ${remaining} aluno(s) não puderam ser alocados em grupos.`;
+                            capacityAlert.classList.remove('d-none');
+                        }
+                    } else {
+                        const numGroups = Math.min(maxGroups, Math.ceil(groupStudents / 5));
+                        const baseSize = Math.floor(groupStudents / numGroups);
+                        let remainder = groupStudents % numGroups;
+                        for(let i = 0; i < numGroups; i++) {
+                           const size = baseSize + (remainder > 0 ? 1 : 0);
+                           groups.push({ id: groupCounter++, size: size });
+                           if (remainder > 0) remainder--;
+                        }
+                    }
+                }
+            }
+            
+            // Schedule individual students for 2 random days
+            const individualSchedules = {};
+            const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+            for (let i = 1; i <= individualStudents; i++) {
+                const shuffledDays = [...days].sort(() => 0.5 - Math.random());
+                individualSchedules[i] = shuffledDays.slice(0, 2);
+            }
+            
+            // Render UI Components
+            renderGroupDistribution(groupStudents, groups, individualStudents);
+            renderStatistics(groups.length, teacherList.length, totalCapacity);
+            renderTeacherAllocation();
+            renderIndividualAllocation(individualStudents, individualSchedules);
+            renderScheduleTabs(groups, individualStudents, individualSchedules, preferAfternoon);
+            
+            // Display results
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // --- UI Rendering Functions ---
+
+        function renderGroupDistribution(groupStudents, groups, individualStudents) {
+            let groupHTML = `<p>Total de alunos em grupos: <strong>${groupStudents}</strong> | Grupos formados: <strong>${groups.length}</strong></p>`;
+            if (groups.length > 0) {
+                const groupSizes = groups.reduce((acc, group) => { 
+                    acc[group.size] = (acc[group.size] || 0) + 1; 
+                    return acc; 
+                }, {});
+                
+                groupHTML += `<div class="d-flex flex-wrap gap-2 mt-3">`;
+                Object.entries(groupSizes).forEach(([size, count]) => {
+                    groupHTML += `<span class="badge bg-primary p-2">${count} grupo(s) de ${size} aluno(s)</span>`;
+                });
+                groupHTML += `</div>`;
+            }
+            if (individualStudents > 0) {
+                groupHTML += `<p class="mt-3">Alunos com atendimento individual: <strong>${individualStudents}</strong></p>`;
+            }
+            document.getElementById('groupDistribution').innerHTML = groupHTML;
+        }
+
+        function renderStatistics(groupCount, teacherCount, capacity) {
+             document.getElementById('totalGroups').textContent = groupCount;
+             document.getElementById('totalTeachers').textContent = teacherCount;
+             document.getElementById('capacityValue').textContent = capacity;
+        }
+
+        function renderTeacherAllocation() {
+            let teacherHTML = '';
+            teacherList.forEach(teacher => {
+                const icons = {
+                    morning: '<i class="fas fa-sun text-warning me-2"></i>',
+                    afternoon: '<i class="fas fa-moon text-info me-2"></i>',
+                    both: '<i class="fas fa-sun text-warning me-1"></i><i class="fas fa-moon text-info me-2"></i>'
+                };
+                const badges = {
+                    morning: '<span class="badge bg-info float-end">Manhã</span>',
+                    afternoon: '<span class="badge bg-warning float-end">Tarde</span>',
+                    both: '<span class="badge bg-primary float-end">Manhã & Tarde</span>'
+                };
+                teacherHTML += `
+                    <div class="card teacher-card mb-2">
+                        <div class="card-body p-2">
+                            ${icons[teacher.shift]}
+                            <strong>${teacher.name}</strong> 
+                            ${badges[teacher.shift]}
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('teacherAllocation').innerHTML = teacherHTML;
+        }
+        
+        function renderIndividualAllocation(count, schedules) {
+            let individualHTML = '';
+            if (count > 0) {
+                for (let i = 1; i <= count; i++) {
+                    individualHTML += `
+                        <div class="card individual-card mb-2">
+                            <div class="card-body p-2">
+                                <i class="fas fa-user-graduate text-danger me-2"></i>
+                                <strong>Aluno Individual ${i}</strong>
+                                <div class="mt-1">
+                                    <span class="badge bg-danger">${schedules[i][0]}</span>
+                                    <span class="badge bg-danger">${schedules[i][1]}</span>
+                                    <span class="float-end badge bg-secondary">2 aulas/semana</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            } else {
+                individualHTML = '<div class="alert alert-info mb-0">Nenhum aluno com atendimento individual</div>';
+            }
+            document.getElementById('individualAllocation').innerHTML = individualHTML;
+        }
+        
+        function renderScheduleTabs(groups, individualStudents, individualSchedules, preferAfternoon) {
+            const weekDays = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira'];
+            let tabsHTML = '';
+            let tabContentHTML = '';
+            
+            weekDays.forEach((day, i) => {
+                const dayKey = day.split('-')[0];
+                const active = i === 0 ? 'active' : '';
+                const show = i === 0 ? 'show active' : '';
+                tabsHTML += `<li class="nav-item" role="presentation"><button class="nav-link ${active}" id="day${i}-tab" data-bs-toggle="tab" data-bs-target="#day${i}" type="button">${day}</button></li>`;
+                tabContentHTML += `<div class="tab-pane fade ${show}" id="day${i}" role="tabpanel">${generateDaySchedule(dayKey, groups, individualStudents, individualSchedules, preferAfternoon, teacherList)}</div>`;
+            });
+            
+            document.getElementById('dayTabs').innerHTML = tabsHTML;
+            document.getElementById('dayTabContent').innerHTML = tabContentHTML;
+        }
+
+        /**
+         * Generates the HTML table for a single day's schedule, ensuring individuals are scheduled only once per day.
+         */
+        function generateDaySchedule(dayKey, groups, individualStudents, individualSchedules, preferAfternoon, teachers) {
+            const timeSlots = [
+                { time: '8h-9h', period: 'morning' }, { time: '9h-10h', period: 'morning' }, 
+                { time: '10h-11h', period: 'morning' }, { time: '11h-12h', period: 'morning' },
+                { time: '13h-14h', period: 'afternoon' }, { time: '14h-15h', period: 'afternoon' },
+                { time: '15h-16h', period: 'afternoon' }, { time: '16h-17h', period: 'afternoon' }
+            ];
+
+            const individualsThisDay = Object.keys(individualSchedules)
+                .filter(id => individualSchedules[id].includes(dayKey))
+                .map(id => parseInt(id));
+
+            const individualsToAssignToday = [...individualsThisDay];
+
+            let tableHTML = `<div class="table-responsive"><table class="table table-hover table-bordered text-center schedule-table"><thead><tr><th class="time-header">Horário</th>`;
+            teachers.forEach(teacher => { tableHTML += `<th>${teacher.name}</th>`; });
+            tableHTML += `</tr></thead><tbody>`;
+
+            let assignedGroupIds = {}; 
+            
+            timeSlots.forEach(slot => {
+                const sessionClass = slot.period === 'morning' ? 'morning-session' : 'afternoon-session';
+                tableHTML += `<tr class="${sessionClass}"><td class="fw-bold align-middle">${slot.time}</td>`;
+                
+                assignedGroupIds[slot.time] = [];
+
+                teachers.forEach(teacher => {
+                    const isAvailable = teacher.shift === 'both' || teacher.shift === slot.period;
+                    if (isAvailable) {
+                        let assigned = false;
+                        
+                        if (individualsToAssignToday.length > 0 && ((preferAfternoon && slot.period === 'afternoon') || !preferAfternoon)) {
+                            const studentId = individualsToAssignToday.shift();
+                            tableHTML += `<td class="individual-slot align-middle">Individual ${studentId}</td>`;
+                            assigned = true;
+                        }
+                        
+                        if (!assigned && groups.length > 0) {
+                            let group;
+                            let attempts = 0;
+                            do {
+                                group = groups[Math.floor(Math.random() * groups.length)];
+                                attempts++;
+                            } while (assignedGroupIds[slot.time].includes(group.id) && attempts < groups.length);
+
+                            assignedGroupIds[slot.time].push(group.id);
+                            tableHTML += `<td class="align-middle">G${group.id} (${group.size} al.)</td>`;
+                        } else if (!assigned) {
+                            tableHTML += `<td class="align-middle">-</td>`;
+                        }
+                    } else {
+                        tableHTML += `<td class="bg-light align-middle">-</td>`;
+                    }
+                });
+                tableHTML += `</tr>`;
+            });
+
+            tableHTML += `</tbody></table></div>`;
+            if (individualsThisDay.length > 0) {
+                let alertMessage = `<div class="alert alert-info mt-3"><i class="fas fa-info-circle me-2"></i>Atendimentos individuais agendados para hoje: ${individualsThisDay.map(id => `Aluno ${id}`).join(', ')}.</div>`;
+                if(individualsToAssignToday.length > 0) {
+                    alertMessage = `<div class="alert alert-warning mt-3"><i class="fas fa-exclamation-triangle me-2"></i>Não foi possível alocar todos os atendimentos individuais. Faltaram: ${individualsToAssignToday.map(id => `Aluno ${id}`).join(', ')}. Tente adicionar mais professores ou horários.</div>`
+                }
+                tableHTML += alertMessage;
+            }
+            return tableHTML;
+        }
+        
+        // --- Data Storage Functions ---
+        
+        /**
+         * Saves current configuration to localStorage
+         */
+        function saveData() {
+            const config = {
+                totalStudents: document.getElementById('totalStudents').value,
+                individualStudents: document.getElementById('individualStudents').value,
+                balanceGroups: document.getElementById('balanceGroups').checked,
+                preferAfternoon: document.getElementById('preferAfternoon').checked,
+                teacherList: teacherList,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('scheduleConfig', JSON.stringify(config));
+            showStatus('Configuração salva com sucesso!', 'success');
+        }
+        
+        /**
+         * Exports current configuration as JSON file
+         */
+        function exportData() {
+            const config = {
+                totalStudents: document.getElementById('totalStudents').value,
+                individualStudents: document.getElementById('individualStudents').value,
+                balanceGroups: document.getElementById('balanceGroups').checked,
+                preferAfternoon: document.getElementById('preferAfternoon').checked,
+                teacherList: teacherList,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `config-grade-horaria-${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showStatus('Dados exportados com sucesso!', 'success');
+        }
+        
+        /**
+         * Imports configuration from JSON file
+         */
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    
+                    // Validate imported data
+                    if (!config.totalStudents || !config.individualStudents || !config.teacherList) {
+                        throw new Error('Formato de arquivo inválido');
+                    }
+                    
+                    // Apply imported configuration
+                    document.getElementById('totalStudents').value = config.totalStudents;
+                    document.getElementById('individualStudents').value = config.individualStudents;
+                    document.getElementById('balanceGroups').checked = config.balanceGroups;
+                    document.getElementById('preferAfternoon').checked = config.preferAfternoon;
+                    
+                    teacherList = config.teacherList;
+                    renderTeacherList();
+                    calculateCapacity();
+                    
+                    showStatus('Configuração importada com sucesso!', 'success');
+                    
+                    // Regenerate schedule with imported data
+                    setTimeout(() => generateSchedule(), 500);
+                } catch (error) {
+                    showStatus('Erro ao importar arquivo: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        /**
+         * Loads saved configuration from localStorage
+         */
+        function loadData() {
+            const savedConfig = localStorage.getItem('scheduleConfig');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    document.getElementById('totalStudents').value = config.totalStudents;
+                    document.getElementById('individualStudents').value = config.individualStudents;
+                    document.getElementById('balanceGroups').checked = config.balanceGroups;
+                    document.getElementById('preferAfternoon').checked = config.preferAfternoon;
+                    
+                    if (config.teacherList && config.teacherList.length > 0) {
+                        teacherList = config.teacherList;
+                    }
+                    
+                    renderTeacherList();
+                    calculateCapacity();
+                    
+                    // Generate schedule with saved data
+                    setTimeout(() => generateSchedule(), 500);
+                } catch (e) {
+                    console.error('Erro ao carregar dados salvos:', e);
+                }
+            }
+        }
+        
+        /**
+         * Shows a status message
+         */
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // --- Event Listeners ---
+        
+        scheduleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateSchedule();
+        });
+
+        addTeacherBtn.addEventListener('click', addTeacher);
+        
+        saveDataBtn.addEventListener('click', saveData);
+        exportDataBtn.addEventListener('click', exportData);
+        importDataInput.addEventListener('change', importData);
+
+        teacherListContainer.addEventListener('click', function(e) {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const teacherId = parseInt(target.dataset.id);
+
+            // Handle edit button click
+            if (target.classList.contains('edit-teacher-btn')) {
+                editingTeacherId = teacherId;
+                renderTeacherList();
+            }
+            // Handle remove button click
+            else if (target.classList.contains('remove-teacher-btn')) {
+                removeTeacher(teacherId);
+            }
+            // Handle save button click
+            else if (target.classList.contains('save-teacher-btn')) {
+                const newShift = document.getElementById(`edit-shift-${teacherId}`).value;
+                const teacher = teacherList.find(t => t.id === teacherId);
+                if (teacher) {
+                    teacher.shift = newShift;
+                }
+                editingTeacherId = null;
+                renderTeacherList();
+                // Recalculate capacity when shift changes
+                calculateCapacity();
+            }
+            // Handle cancel button click
+            else if (target.classList.contains('cancel-edit-btn')) {
+                editingTeacherId = null;
+                renderTeacherList();
+            }
+        });
+        
+        // Initialize the app on load
+        window.onload = function() {
+            // Add some default teachers for demonstration
+            teacherList = [
+                { id: 1, name: 'Prof. Ana', shift: 'both' },
+                { id: 2, name: 'Prof. Bruno', shift: 'both' },
+                { id: 3, name: 'Prof. Carla', shift: 'both' },
+                { id: 4, name: 'Prof. Daniel', shift: 'afternoon' },
+                { id: 5, name: 'Prof. Elisa', shift: 'afternoon' },
+                { id: 6, name: 'Prof. Fábio', shift: 'morning' }
+            ];
+            
+            // Try to load saved data
+            loadData();
+            
+            // If no saved data, render with defaults
+            if (teacherList.length === 0) {
+                renderTeacherList();
+                calculateCapacity();
+            }
+        };
+    </script>
+</body>
+</html>
